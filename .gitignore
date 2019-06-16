@@ -5,3 +5,4 @@ indata/*
 !gifs/.gitkeep
 !indata/.gitkeep
 /.idea
+__pycache__/*

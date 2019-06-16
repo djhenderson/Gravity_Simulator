@@ -1,7 +1,11 @@
+# Newton.py
+
 from basic_linalg import *
 import imageio
 import matplotlib.pyplot as plt
-G = 6.674 * 10 ** (-11)
+
+# from https://en.wikipedia.org/wiki/Gravitational_constant
+G = 6.67408 * 10 ** (-11)  # units: N · (m/kg)² or m³ ⋅ kg⁻¹ ⋅ s⁻²
 
 
 class Body:
@@ -14,7 +18,16 @@ class Body:
     applied_force: Vector
     acceleration: Vector
 
-    def __init__(self, name: str, position: Vector, mass: float, velocity: Vector, diameter: float, applied_force: Vector, acceleration: Vector):
+    def __init__(
+        self,
+        name: str,
+        position: Vector,
+        mass: float,
+        velocity: Vector,
+        diameter: float,
+        applied_force: Vector,
+        acceleration: Vector,
+    ):
         self.name = name
         self.position = position
         self.mass = mass
@@ -25,15 +38,22 @@ class Body:
         self.acceleration = acceleration
 
     def disp(self):
-        return ('Name: %s, Position: [%f,%f], Velocity: [%f,%f], Mass: %f \n') % (
-        self.name, self.position[0], self.position[1], self.velocity[0], self.velocity[1], self.mass)
+        return (
+            f'Name: {self.name}, '
+            f'Position: {self.position!r}, '
+            f'Velocity: {self.velocity!r}, '
+            f'Mass: {self.mass} \n'
+        )
 
 
 def calculate_force(obj1: Body, obj2: Body) -> Vector:
-    force_direction = vector_addition(obj2.position, vector_multiplication_by_k(-1.0, obj1.position))
+    force_direction = vector_addition(
+        obj2.position,
+        vector_multiplication_by_scalar(-1.0, obj1.position)
+    )
     distance = vector_length(force_direction)
     total_force = (G * obj1.mass * obj2.mass) / (distance ** 2)
-    return vector_multiplication_by_k(total_force / distance, force_direction)
+    return vector_multiplication_by_scalar(total_force / distance, force_direction)
 
 
 class SpaceImage:
@@ -46,8 +66,14 @@ class SpaceImage:
         new_bodies: List[Body] = []
         for obj in self.bodies:
 
-            obj.position = vector_addition(obj.position, vector_multiplication_by_k(jump, obj.velocity))
-            obj.velocity = vector_addition(obj.velocity, vector_multiplication_by_k(jump, obj.acceleration))
+            obj.position = vector_addition(
+                obj.position,
+                vector_multiplication_by_scalar(jump, obj.velocity)
+            )
+            obj.velocity = vector_addition(
+                obj.velocity,
+                vector_multiplication_by_scalar(jump, obj.acceleration)
+                )
             new_bodies.append(obj)
 
         self.bodies = new_bodies
@@ -56,10 +82,15 @@ class SpaceImage:
             resulting_force = [0.0, 0.0]
             for other_obj in self.bodies:
                 if other_obj.position != obj.position:
-                    resulting_force = vector_addition(resulting_force, calculate_force(obj, other_obj))
+                    resulting_force = vector_addition(
+                        resulting_force,
+                        calculate_force(obj, other_obj),
+                    )
+
             obj.applied_force = resulting_force
-            obj.acceleration = vector_multiplication_by_k(1 / obj.mass, resulting_force)
+            obj.acceleration = vector_multiplication_by_scalar(1 / obj.mass, resulting_force)
             new_bodies.append(obj)
+
         self.bodies = new_bodies
 
     def add_body(self, body: Body):
@@ -67,18 +98,40 @@ class SpaceImage:
 
     def show(self):
         for body in self.bodies:
-            plt.scatter(body.position[0], body.position[1], body.diameter/10**5, edgecolors='none')
+            plt.scatter(
+                body.position[0],
+                body.position[1],
+                body.diameter / 10 ** 5,
+                edgecolors='none',
+            )
 
     def save(self, file_name, axis, second):
         plt.axis(axis)
-        plt.title('%i seconds' % second)
+        plt.title(f'{second} seconds')
         for body in self.bodies:
-            plt.scatter(body.position[0], body.position[1], body.diameter/10**5, edgecolors='none')
+            plt.scatter(
+                body.position[0],
+                body.position[1],
+                body.diameter / 10 ** 5,
+                edgecolors='none',
+            )
             if vector_length(body.applied_force) and vector_length(body.velocity) != 0:
-                plt.quiver(body.position[0], body.position[1], body.applied_force[0], body.applied_force[1],
-                           color=['r'], scale_units='height')
-                plt.quiver(body.position[0], body.position[1], body.velocity[0], body.velocity[1], color=['b'])
+                plt.quiver(
+                    body.position[0],
+                    body.position[1],
+                    body.applied_force[0],
+                    body.applied_force[1],
+                    color=['r'],
+                    scale_units='height',
+                )
+                plt.quiver(
+                    body.position[0],
+                    body.position[1],
+                    body.velocity[0],
+                    body.velocity[1],
+                    color=['b'],
+                )
+
         plt.savefig(file_name, bbox_inches='tight')
         plt.clf()
         return file_name
-
